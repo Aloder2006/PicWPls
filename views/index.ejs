@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وضع علم فلسطين على صورتك</title>
+    <!-- تضمين Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            direction: rtl;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        #preview {
+            display: none;
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1>وضع علم فلسطين على صورتك</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <input id="fileInput" type="file" name="pic1" class="form-control-file" required>
+                <button type="button" id="chooseFileButton" class="btn btn-info">اختيار صورة</button>
+            </div>
+            <img id="preview" src="#" alt="معاينة الصورة">
+            <div class="mt-3">
+                <button type="submit" id="uploadButton" class="btn btn-primary">تحميل الصورة</button>
+                <button type="button" id="resetButton" class="btn btn-secondary">إعادة اختيار الصورة</button>
+            </div>
+        </form>
+        
+        <div id="loading" class="mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">جارٍ التحميل...</span>
+            </div>
+            <p>جارٍ التحميل...</p>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#uploadButton").hide();
+            $("#resetButton").hide();
+
+            $("#chooseFileButton").click(function() {
+                $("#fileInput").click();
+            });
+
+            $("#fileInput").change(function() {
+                var file = this.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#preview').attr('src', e.target.result);
+                        $('#preview').show();
+                        $("#uploadButton").show(); 
+                        $("#resetButton").show();
+                    }
+                    reader.readAsDataURL(file);
+                    $("#chooseFileButton").hide(); // إخفاء زر اختيار الصورة بعد اختيار الصورة
+                }
+            });
+
+            $("#resetButton").click(function() {
+                $('#uploadForm')[0].reset();
+                $('#preview').hide();
+                $("#resetButton").hide(); // إخفاء زر إعادة تعيين الصورة
+                $("#chooseFileButton").show(); // إظهار زر اختيار الصورة
+                $("#uploadButton").hide(); // إخفاء زر تحميل الصورة عند إعادة تعيين الصورة
+            });
+
+            $("#uploadForm").submit(function(e) {
+                e.preventDefault();
+                $("#loading").show(); // عرض صفحة جار التحميل
+
+                var fileInput = document.getElementById('fileInput');
+                var file = fileInput.files[0];
+
+                if (!file) {
+                    alert("يرجى اختيار صورة قبل التحميل!");
+                    $("#loading").hide(); // إخفاء صفحة جار التحميل
+                    return false; // منع إرسال النموذج
+                }
+
+                if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+                    alert("يجب تحميل ملف صورة فقط!");
+                    $("#loading").hide(); // إخفاء صفحة جار التحميل
+                    return false; // منع إرسال النموذج
+                }
+
+                $.ajax({
+                    url: '/profile-pic',
+                    type: 'POST',
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        window.location.href = "/result";
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                        alert("حدث خطأ ما!");
+                        $("#loading").hide(); // إخفاء صفحة جار التحميل
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+</html>
